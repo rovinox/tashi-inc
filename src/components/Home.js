@@ -56,25 +56,33 @@ export default function Home() {
   const [modalStyle] = useState(getModalStyle);
   const [anchorEl, setAnchorEl] = useState(null);
   const [name, setName] = useState("")
-  const [edit, setEdit] = useState(false)
- 
-  
+  const [edit, setEdit] = useState({})
+
 
 
   useEffect(()=>{
      axios.get("/api/students").then(response =>{
-       SetStudents(response.data)
-       console.log('response.data: ', response.data);
+       const studentLists = response.data.map(student => {
+         student.isEditing = false;
+         return student;
+       });
+
+       SetStudents(studentLists);
+       console.log('response.data: ',students);
        
      }).catch(err=>console.log(err))
-    
     ;
   },[])
 
   const handleClick = (e) => {
     console.log(e);
-   setEdit(true)
-    
+    const foundStudent = students.find(student => student.user_id === e);
+    const foundStudentIndex = students.findIndex(student => student.user_id === e);
+    const studentsClone = [...students];
+
+    foundStudent.isEditing = true;
+    studentsClone.splice(foundStudentIndex, foundStudent);
+    SetStudents(studentsClone);
   };
 
   const handleClose = () => {
@@ -96,13 +104,41 @@ export default function Home() {
   
   }
 
-  const handleEditchange =  async() => {
+  const handleEditChange =  (event, userId) => {
+    const editClone = {...edit};
+    editClone[userId]=event.target.value;
+    setEdit(editClone);
+    console.log('EDIT===', edit);
+    // try {
 
-    try {
+    //   const res = await axios.put(`/api/changestudent/${getId}`,{name})
+    //   SetStudents(res)
+    // } catch(err) {console.log(err)}
+  }
 
-      const res = await axios.put(`/api/changestudent/${getId}`,{name})
-      SetStudents(res)
+  const handleCheckIcon = async(userId) => {
+   
+    const text = edit[userId]; 
+    console.log(userId, ' CHECK ICON CLICKED FOR ===', text);
+
+     try {
+      const res = await axios.put(`/api/changestudent/${userId}`,{name: text});
+      console.log('RES', res);
+
+      const newStudent = res.data;
+      const newStudentIndex = students.findIndex(student => student.user_id === newStudent.user_id);
+      console.log('USER', newStudentIndex);
+      const allStudentsClone = [...students];
+  
+      newStudent.isEditing = false;
+      console.log('NEW ST', newStudent);
+      allStudentsClone.splice(newStudentIndex, {user_id: 2});
+      console.log('===== Clone', allStudentsClone);
+      SetStudents(allStudentsClone);
+      console.log('NEW STUDENTS', students);
+     // SetStudents(res)
     } catch(err) {console.log(err)}
+    
   }
   
 
@@ -121,7 +157,8 @@ export default function Home() {
         </TableHead>
         <TableBody>
          <TableRow >
-      {edit ? <TextField></TextField> :<TableCell component="th" scope="row">
+      {student.isEditing ? <> <TextField onChange={(e) => handleEditChange(e, student.user_id)} ></TextField>
+        <Button><CheckIcon onClick={() => handleCheckIcon(student.user_id)} /></Button> </> :<TableCell component="th" scope="row">
           {student.first_name}
           
   <Button onClick={()=>{handleClick(student.user_id)}}>
