@@ -44,28 +44,11 @@ app.get("/api/students", async (req, res) =>{
 app.put("/api/changestudent/:id", async (req, res) =>{
     const {id} = req.params
     const {name} = req.body
-    console.log(id,name);
     try{
-        const student = {
-            
-            user_id: parseInt(id),
-            email: "gghhh@gmail.com",
-            password: "$2a$08$cJwAuK4ter0PrjRdaYTVgu2nW0uyj9H8aT0gtMpWK4XRmM42PzjDC",
-            first_name: name,
-            last_name: "sjdnvjkdvn",
-            question1: null,
-            question2: null,
-            question3: null,
-            answer1: null,
-            answer2: null,
-            answer3: null,
-            image: null,
-        }
-     res.status(200).json(student);
-        // const db = req.app.get("db")
-        // const allStudents = await db.Change_name(name, id)
-        // res.status(200).json(allStudents)
-        // console.log(allStudents);
+        const db = req.app.get("db")
+        const newName = await db.Change_name(name, id)
+        res.status(200).json(newName)
+        
     } catch(err){
        console.log(err);
     }
